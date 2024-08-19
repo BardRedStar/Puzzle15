@@ -168,80 +168,42 @@ extension GameManager {
     }
 
     private func makeDefaultField(fieldSize: Int) -> [[GameItem]] {
-        var shuffledSequence: Array<GameItem> = (0..<(fieldSize * fieldSize)).map { GameItem(number: $0) }
-        shuffledSequence.shuffle()
-
-        var index = 0
+        var number = 1
 
         var field = Array<[GameItem]>()
         for _ in 0..<fieldSize {
             var row = Array<GameItem>()
             for _ in 0..<fieldSize {
-                row.append(shuffledSequence[index])
-                index += 1
+                row.append(GameItem(number: number))
+                number += 1
             }
             field.append(row)
         }
 
-        if !checkFieldSolvability(field: field) {
-            makeFieldSolvable(field: &field)
+        field[fieldSize-1][fieldSize-1] = GameItem(number: 0)
 
-            if isPuzzleSolved(field: field) {
-                return makeDefaultField(fieldSize: fieldSize)
-            }
+        var zeroCoordinate = Coordinate(r: fieldSize - 1, c: fieldSize - 1)
+        for i in 0..<200 {
+            zeroCoordinate = makeRandomStep(zeroCoordinate: zeroCoordinate, field: &field)
         }
 
         return field
     }
 
-    private func checkFieldSolvability(field: [[GameItem]]) -> Bool {
-        var zeroCoordinate: Coordinate = (0, 0)
-        var totalInversions = 0
-        for row in 0..<field.count {
-            for column in 0..<field[row].count {
+    private func makeRandomStep(zeroCoordinate: Coordinate, field: inout [[GameItem]]) -> Coordinate {
+        let allowedCoordinates: [Coordinate] = [
+            Coordinate(r: zeroCoordinate.r + 1, c: zeroCoordinate.c),
+            Coordinate(r: zeroCoordinate.r - 1, c: zeroCoordinate.c),
+            Coordinate(r: zeroCoordinate.r, c: zeroCoordinate.c + 1),
+            Coordinate(r: zeroCoordinate.r, c: zeroCoordinate.c - 1)
+        ].filter { (0..<field.count).contains($0.c) && (0..<field.count).contains($0.r) }
 
-                if field[row][column].number == 0 {
-                    zeroCoordinate = Coordinate(row, column)
-                    continue
-                }
+        let nextCoordinate = allowedCoordinates[Int.random(in: 0..<allowedCoordinates.count)]
 
-                if field[row][column].number == 1 {
-                    continue
-                }
+        field[zeroCoordinate.r][zeroCoordinate.c] = field[nextCoordinate.r][nextCoordinate.c]
+        field[nextCoordinate.r][nextCoordinate.c] = GameItem(number: 0)
 
-                var inversionsCount = 0
-
-                for i in row..<field.count {
-                    for j in column+1..<field[i].count {
-                        if field[i][j].number != 0, field[row][column].number > field[i][j].number {
-                            inversionsCount += 1
-                        }
-                    }
-                }
-                totalInversions += inversionsCount
-            }
-        }
-
-        if (field.count % 2 != 0) {
-            return totalInversions % 2 == 0
-        }
-
-        let zeroPosition = (field.count - zeroCoordinate.r) * (field.count - zeroCoordinate.c - 1)
-
-        if (totalInversions % 2 == 0) {
-            return zeroPosition % 2 == 1
-        }
-
-        return zeroPosition % 2 == 0
-    }
-
-    private func makeFieldSolvable(field: inout [[GameItem]]) {
-        let first = field[0][0].number == 0 ? Coordinate(1, 1) : Coordinate(0, 0)
-        let second = field[0][1].number == 0 ? Coordinate(1, 0) : Coordinate(0, 1)
-
-        let temp = field[first.r][first.c]
-        field[first.r][first.c] = field[second.r][second.c]
-        field[second.r][second.c] = temp
+        return nextCoordinate
     }
 
     private func isPuzzleSolved(field: [[GameItem]]) -> Bool {
