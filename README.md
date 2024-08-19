@@ -10,11 +10,15 @@ A classic puzzle game of 15 written in pure SwiftUI.
 
 ## Screenshots
 
+<p float="left">
 <img src="./src/1.png" width="300" title="Main menu">
 <img src="./src/2.png" width="300" title="Settings">
+</p>
 
+<p float="left">
 <img src="./src/3.png" width="300" title="Victory">
 <img src="./src/4.png" width="300" title="Game">
+</p>
 
 ## Requirements
 
